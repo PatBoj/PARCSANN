@@ -1,1 +1,1 @@
-# PB_WK_Biology-Inspired_Computations_project
+# Biology-Inspired Computations project by Bojarski Patryk and Kubiński Wojciech
