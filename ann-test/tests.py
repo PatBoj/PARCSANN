@@ -43,4 +43,34 @@ def testActivationFunctions():
     plt.plot(x, y)
     plt.show()
 
-testActivationFunctions()
+def testCostFunctions():
+    ann.n = ann.NeuralNetwork(5)
+    output = np.arange(-10, 10, 0.01)
+    desireOutput = np.full(2000, 0)
+
+    # mean squared error
+    plt.title("mse")
+    plt.plot(output, ann.n.costMSE(desireOutput, output))
+    plt.show()
+
+    # mean squared error derivative
+    plt.title("mse derivative")
+    plt.plot(output, ann.n.costMSEDerivative(desireOutput, output))
+    plt.show()
+
+    # single point mean squared error
+    print("MSE single point test:")
+    print("\tIt's working :)\n") if ann.n.costMSE(0, 1) == 1 else print("\tIt's not working :(\n")
+
+    # single point mean squared error derivative
+    print("MES derivative single point test:")
+    print("\tIt's working :)\n") if ann.n.costMSEDerivative(0, 1) == -2 else print("\tIt's not working :(\n")
+
+def testing():
+    weights = []
+    for i in range(5):
+        weights.append(np.random.rand(5, 5) * 2 - 1)
+    for i in range(5):
+        print(weights[i])
+
+testing()
