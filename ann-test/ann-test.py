@@ -100,20 +100,25 @@ class NeuralNetwork:
             layersErrors[i] = self.weights[i+1].T.dot(layersErrors[i+1]) \
                 * self.activationDerivative(z[i])
             
-            # number of outputs, NOT number of elements in the output vector
-            n = desireOutput.shape[1]
+        # number of outputs, NOT number of elements in the output vector
+        n = desireOutput.shape[1]
 
-            # derivative of „C” with respect to „W” is i-th layer is a dot product
-            # between „raw” neuron value in previous layer and layer error
-            # also we need to get average over all elements in te output
-            # „i” is an index in layersErrors set and „err” is i-th layer error
-            dW = [err.dot(a[i].T) / float(n) for i, err in enumerate(layersErrors)]
+        # derivative of „C” with respect to „W” is i-th layer is a dot product
+        # between „raw” neuron value in previous layer and layer error
+        # also we need to get average over all elements in te output
+        # „i” is an index in layersErrors set and „err” is i-th layer error
+        dW = [err.dot(a[i].T) / float(n) for i, err in enumerate(layersErrors)]
             
-            # same as above, but we need to create matrix with one column which
-            # contains only error in i-th layer
-            db = [err.dot(np.ones((n, 1))) / float(n) for err in enumerate(layersErrors)]
+        # same as above, but we need to create matrix with one column which
+        # contains only error in i-th layer
+        db = [err.dot(np.ones((n, 1))) / float(n) for err in enumerate(layersErrors)]
             
-            return dW, db
+        return dW, db
+
+    def train(self, inputs, desireOutputs, n = desireOutputs.shape[1], eta = 1):
+        for j in range()
+
+    
 
     def sigmoid(self, x):
         """
