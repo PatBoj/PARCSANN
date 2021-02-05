@@ -12,16 +12,17 @@ class NeuralNetwork:
     layers : array_like
         Number of neurons in every layer
 
-    activationFunction: string, optional
+    activationFunctionName: string, optional
         Type of activation function: sigmoid, ReLU or hyperbolic tangent (tanh)
     
     """
-    def __init__(self, layers, activationFunction = "sigmoid"):
+    def __init__(self, layers, activationFunctionName = "sigmoid"):
         # Seed the random number generator
         np.random.seed(1)
         
         self.layers = layers
-        self.activationFunction = activationFunction
+        self.activation = self.getActivationFunction(activationFunctionName)
+        self.activationDerivative = self.getActivationFunctionDerivative(activationFunctionName)
 
         self.weights = []
         self.biases = []
@@ -33,27 +34,27 @@ class NeuralNetwork:
             self.weights.append(np.random.rand(self.layers[i+1], self.layers[i]) * 2 - 1)
             self.biases.append(np.random.rand(self.layers[i+1], 1) * 2 - 1)
     
-    def getActivationFunction(self, functionName, x):
+    def getActivationFunction(self, functionName):
         if(functionName == "sigmoid"):
-            return self.sigmoid(x)
+            return lambda x : self.sigmoid(x)
         elif(functionName == "ReLU"):
-            return self.ReLU(x)
+            return lambda x : self.ReLU(x)
         elif(functionName == "tanh"):
-            return self.tanh(x)
+            return lambda x : self.tanh(x)
         else:
             print("Given activation function does not exist. Sigmoid function was used")
-            return self.sigmoid(x)
+            return lambda x : self.sigmoid(x)
 
-    def getActivationFunctionDerivative(self, functionName, x):
+    def getActivationFunctionDerivative(self, functionName):
         if(functionName == "sigmoid"):
-            return self.sigmoidDerivative(x)
+            return lambda x : self.sigmoidDerivative(x)
         elif(functionName == "ReLU"):
-            return self.ReLUDerivative(x)
+            return lambda x : self.ReLUDerivative(x)
         elif(functionName == "tanh"):
-            return self.tanhDerivative(x)
+            return lambda x : self.tanhDerivative(x)
         else:
             print("Given activation function does not exist. Sigmoid function was used")
-            return self.sigmoidDerivative(x)
+            return lambda x : self.sigmoidDerivative(x)
 
     def feedforward(self, input):
         # „z” is a set of vectors which contain value of every neuron BEFORE 
@@ -71,7 +72,7 @@ class NeuralNetwork:
             z.append(self.weights[i].dot(a[-1]) + self.biases[i])
 
             # then apply activation function to the previos outputs
-            a.append(self.getActivationFunction(self.activationFunction, z[-1]))
+            a.append(self.activation(z[-1]))
         
         return z, a
 
@@ -90,8 +91,29 @@ class NeuralNetwork:
         # last layer error is just derivative of the cost function with respect to
         # received values from neural network times derivative of activation function
         # in respect to the „raw” value of the neuron
-        layersErrors[-1] = self.costMSEDerivative(desireOutput, a[-1]) 
-        * self.getActivationFunctionDerivative(self.getActivationFunction, z[-1]) 
+        layersErrors[-1] = self.costMSEDerivative(desireOutput, a[-1]) \
+            * self.activationDerivative(z[-1])
+
+        # now it's time for backpropagation, and as the name says it's BACKpropagation
+        # so we itereate in reverse order
+        for i in reversed(range(len(layersErrors) - 1)):
+            layersErrors[i] = self.weights[i+1].T.dot(layersErrors[i+1]) \
+                * self.activationDerivative(z[i])
+            
+            # number of outputs, NOT number of elements in the output vector
+            n = desireOutput.shape[1]
+
+            # derivative of „C” with respect to „W” is i-th layer is a dot product
+            # between „raw” neuron value in previous layer and layer error
+            # also we need to get average over all elements in te output
+            # „i” is an index in layersErrors set and „err” is i-th layer error
+            dW = [err.dot(a[i].T) / float(n) for i, err in enumerate(layersErrors)]
+            
+            # same as above, but we need to create matrix with one column which
+            # contains only error in i-th layer
+            db = [err.dot(np.ones((n, 1))) / float(n) for err in enumerate(layersErrors)]
+            
+            return dW, db
 
     def sigmoid(self, x):
         """
