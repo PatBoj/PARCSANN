@@ -66,14 +66,8 @@ def testCostFunctions():
     print("MES derivative single point test:")
     print("\tIt's working :)\n") if ann.n.costMSEDerivative(0, 1) == -2 else print("\tIt's not working :(\n")
 
-def testing(name):
-    if(name == "tak"):
-        return lambda x : x**2
-    elif(name == "nie"):
-        return lambda x : np.sqrt(x)
-    else:
-        return lambda x : 0
+def testing():
+    for _ in range(5):
+        print("elo")
 
-fun = testing("tak")
-print(fun(5))
-    
+testing()
