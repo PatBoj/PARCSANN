@@ -6,7 +6,7 @@ class NeuralNetwork:
         np.random.seed(1)
         # Set synaptic weights to a 3x1 matrix,
         # with values from -1 to 1 and mean 0
-        self.synaptic_weights = 2 * np.random.random((n, 1)) - 1
+        self.synaptic_weights = 2 * np.random.rand((n, 1)) - 1
 
     def sigmoid(self, x):
         """
