@@ -24,15 +24,23 @@ class NeuralNetwork:
         self.activation = self.getActivationFunction(activationFunctionName)
         self.activationDerivative = self.getActivationFunctionDerivative(activationFunctionName)
 
-        self.weights = []
-        self.biases = []
-
         self.setRandomWeightsAndBiases()
 
     def setRandomWeightsAndBiases(self):
+        self.weights = []
+        self.biases = []
+
         for i in range(len(self.layers)-1):
             self.weights.append(np.random.rand(self.layers[i+1], self.layers[i]) * 2 - 1)
             self.biases.append(np.random.rand(self.layers[i+1], 1) * 2 - 1)
+    
+    def setWeightOnes(self):
+        self.weights = []
+        self.biases = []
+
+        for i in range(len(self.layers)-1):
+            self.weights.append(np.ones((self.layers[i+1], self.layers[i])))
+            self.biases.append(np.ones((self.layers[i+1], 1)))
     
     def getActivationFunction(self, functionName):
         if(functionName == "sigmoid"):
@@ -58,15 +66,15 @@ class NeuralNetwork:
 
     def feedforward(self, input):
         # „z” is a set of vectors which contain value of every neuron BEFORE 
-        # activation function was applied, also len(z) is equal to 
+        # activation function was applied
         z = []
 
-        # „z” is a set of vectors which contain value of every neuron AFTER
+        # „a” is a set of vectors which contain value of every neuron AFTER
         # activation function was applied
         a = [np.copy(input)]
 
         # for every layer „i”
-        for i in range(len(self.layers - 1)):
+        for i in range(len(self.layers) - 1):
             # first, compute „raw” neuron values in i-th layer
             # z = W * a + b, where „z” is from layer „L” and a from layer „L-1”
             z.append(self.weights[i].dot(a[-1]) + self.biases[i])
@@ -86,7 +94,7 @@ class NeuralNetwork:
         db = []
 
         # Initialize layer's error sets
-        layersErrors = [None] * len(self.layers - 1)
+        layersErrors = [None] * (len(self.layers) - 1)
 
         # last layer error is just derivative of the cost function with respect to
         # received values from neural network times derivative of activation function
@@ -112,23 +120,23 @@ class NeuralNetwork:
             
         # same as above, but we need to create matrix with one column which
         # contains only error in i-th layer
-        db = [err.dot(np.ones((batchSize, 1))) \
-            / float(batchSize) for err in enumerate(layersErrors)]
+        db = [err.dot(np.ones((batchSize, 1))) / float(batchSize) for err in layersErrors]
             
         return dw, db
 
-    def train(self, inputs, desireOutputs, batchSize, epochs = 50, eta = 1):
+    def train(self, inputs, desireOutputs, batchSize, epochs = 100, eta = 0.01):
         # 1 epoch is when every mini-batch passed throught the network
         for _ in range(epochs):
             i = 0
-            while(i < len(desireOutputs)):
-                inputsBatch = inputs[i : i + batchSize]
-                desireOutputsBatch = desireOutputs[i : i + batchSize]
-                i += batchSize
+            while(i < desireOutputs.shape[1]):
+                inputsBatch = inputs[:, i : i + batchSize]
+                desireOutputsBatch = desireOutputs[:, i : i + batchSize]
+                i = i + batchSize
                 z, a = self.feedforward(inputsBatch)
                 dw, db = self.backpropagation(desireOutputsBatch, z, a)
                 self.weights = [w + eta * dWeight for w, dWeight in zip(self.weights, dw)]
                 self.biases = [b + eta * dBiases for b, dBiases in zip(self.biases, db)]
+                print(np.linalg.norm(a[-1] - desireOutputsBatch))
 
     def sigmoid(self, x):
         """
