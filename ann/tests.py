@@ -2,7 +2,12 @@ import importlib
 import numpy as np
 from numpy import genfromtxt
 import matplotlib.pyplot as plt
-ann = importlib.import_module("ann-test")
+ann = importlib.import_module("ann")
+import os
+
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
 
 def testActivationFunctions():
     ann.n = ann.NeuralNetwork(5)
@@ -96,13 +101,13 @@ def dataSetTest():
     CLASS (Cammeo = 10, Osmancik = 01)
     """
 
-    data = genfromtxt("C:/Users/Patryk/Documents/GitHub/PB_WK_Biology-Inspired_Computations_project/ann-test/rice_one_output.csv", delimiter=',')
+    data = genfromtxt("../patterns/data.csv", delimiter=';')
     np.random.shuffle(data)
 
     #inputs = data[:, :-2].T
     #outputs = data[:, [-2, -1]].T
 
-    nTesting = 300
+    nTesting = 1000
     testingInputs = data[:nTesting, :-1].T
     testingOutputs = data[:nTesting, [-1]].T
     inputs = data[nTesting:, :-1].T
@@ -130,12 +135,12 @@ def dataSetTest():
     
     print("\nNetwork gives: \n", a[-1].T, ", \nbut it should give: \n", outputs[:, t], sep="")
     """
-    n = ann.NeuralNetwork([len(inputs), 100, 100, 100, len(outputs)])
-    n.train(inputs, outputs, batchSize = 400, epochs = 500, eta = .1)
-
-    _, a = n.feedforward(testingInputs)
+    n = ann.NeuralNetwork([len(inputs), 10, 12, 10, len(outputs)])
+    error = n.train(inputs, outputs, batchSize = 10, epochs = 100, eta = 0.001, testInputs = testingInputs, testOutputs = testingOutputs)
+    np.savetxt("error.csv", error, delimiter = ",", fmt = "%.10f")
+    #_, a = n.feedforward(testingInputs)
     #print(np.round(a[-1]))
     #print(testingOutputs)
-    print((1 - np.sum(np.abs(np.round(a[-1]) - testingOutputs)) / nTesting) * 100, "%", sep="")
+    #print((1 - np.sum(np.abs(np.round(a[-1]) - testingOutputs)) / nTesting) * 100, "%", sep="")
 
 dataSetTest()

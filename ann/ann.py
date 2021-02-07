@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 class NeuralNetwork:
     """
@@ -12,8 +13,8 @@ class NeuralNetwork:
     layers : array_like
         Number of neurons in every layer
 
-    activationFunctionName: string, optional
-        Type of activation function: sigmoid, ReLU or hyperbolic tangent (tanh)
+    activationFunctionName: array_like
+        Type of activation functions: sigmoid, ReLU or hyperbolic tangent (tanh)
     
     """
     def __init__(self, layers, activationFunctionName = "sigmoid"):
@@ -21,8 +22,18 @@ class NeuralNetwork:
         np.random.seed(1)
         
         self.layers = layers
-        self.activation = self.getActivationFunction(activationFunctionName)
-        self.activationDerivative = self.getActivationFunctionDerivative(activationFunctionName)
+
+        if(isinstance(activationFunctionName, str)):
+            self.activationFunctionName = np.full(len(layers) - 1, activationFunctionName)
+        else:
+            self.activationFunctionName = activationFunctionName
+        
+        self.activation = []
+        self.activationDerivative = []
+
+        for i in range(len(layers) - 1):
+            self.activation.append(self.getActivationFunction(self.activationFunctionName[i]))
+            self.activationDerivative.append(self.getActivationFunctionDerivative(self.activationFunctionName[i]))
 
         self.setRandomWeightsAndBiases()
 
@@ -80,7 +91,7 @@ class NeuralNetwork:
             z.append(self.weights[i].dot(a[-1]) + self.biases[i])
 
             # then apply activation function to the previos outputs
-            a.append(self.activation(z[-1]))
+            a.append(self.activation[i](z[-1]))
         
         return z, a
 
@@ -100,13 +111,13 @@ class NeuralNetwork:
         # received values from neural network times derivative of activation function
         # in respect to the „raw” value of the neuron
         layersErrors[-1] = self.costMSEDerivative(desireOutput, a[-1]) \
-            * self.activationDerivative(z[-1])
+            * self.activationDerivative[-1](z[-1])
 
         # now it's time for backpropagation, and as the name says it's BACKpropagation
         # so we itereate in reverse order
         for i in reversed(range(len(layersErrors) - 1)):
             layersErrors[i] = self.weights[i+1].T.dot(layersErrors[i+1]) \
-                * self.activationDerivative(z[i])
+                * self.activationDerivative[i](z[i])
             
         # number of outputs, NOT number of elements in the output vector
         # or it's just batch size
@@ -124,9 +135,14 @@ class NeuralNetwork:
             
         return dw, db
 
-    def train(self, inputs, desireOutputs, batchSize, epochs = 100, eta = 0.01):
+    def train(self, inputs, desireOutputs, batchSize, epochs, eta, testInputs, testOutputs):
+        if(desireOutputs.shape[1] % batchSize != 0):
+            warnings.warn("Not all data will be use to training. Batch size is not a factor of the number of observations.")
+
+        trainingError = np.empty((epochs+1, testOutputs.shape[1]+1))
+        trainingError[0, :] = np.append(0, self.trainingEfficiency(testInputs, testOutputs))
         # 1 epoch is when every mini-batch passed throught the network
-        for _ in range(epochs):
+        for j in range(epochs):
             i = 0
             while(i < desireOutputs.shape[1]):
                 inputsBatch = inputs[:, i : i + batchSize]
@@ -136,7 +152,17 @@ class NeuralNetwork:
                 dw, db = self.backpropagation(desireOutputsBatch, z, a)
                 self.weights = [w + eta * dWeight for w, dWeight in zip(self.weights, dw)]
                 self.biases = [b + eta * dBiases for b, dBiases in zip(self.biases, db)]
-                print(np.linalg.norm(a[-1] - desireOutputsBatch))
+                #print(np.linalg.norm(a[-1] - desireOutputsBatch))
+            trainingError[j+1, :] = np.append(j+1, self.trainingEfficiency(testInputs, testOutputs))
+        return trainingError
+
+    def trainingEfficiency(self, testInputs, testOutputs):
+        _, a = self.feedforward(testInputs)
+        #print(a[-1])
+        #print(testOutputs)
+        #print(np.abs(a[-1]/testOutputs - 1))
+        print("ERROR: ", np.sum(np.abs(a[-1]/testOutputs - 1)) / testOutputs.shape[1] * 100, "%", sep = "")
+        return np.abs(a[-1]/testOutputs - 1)
 
     def sigmoid(self, x):
         """
