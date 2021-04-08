@@ -31,7 +31,7 @@ class NeuralNetwork:
         self.activation = []
         self.activationDerivative = []
 
-        for i in range(len(layers) - 1):
+        for i in range(len(self.layers) - 1):
             self.activation.append(self.getActivationFunction(self.activationFunctionName[i]))
             self.activationDerivative.append(self.getActivationFunctionDerivative(self.activationFunctionName[i]))
 
@@ -161,8 +161,11 @@ class NeuralNetwork:
         #print(a[-1])
         #print(testOutputs)
         #print(np.abs(a[-1]/testOutputs - 1))
-        print("ERROR: ", np.sum(np.abs(a[-1]/testOutputs - 1)) / testOutputs.shape[1] * 100, "%", sep = "")
+        #print("ERROR: ", np.sum(np.abs(a[-1]/testOutputs - 1)) / testOutputs.shape[1] * 100, "%", sep = "")
         return np.abs(a[-1]/testOutputs - 1)
+
+    def error(self, testInputs, testOutputs):
+        return np.sum(self.trainingEfficiency(testInputs, testOutputs)) / testOutputs.shape[1]
 
     def sigmoid(self, x):
         """

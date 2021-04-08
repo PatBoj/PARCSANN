@@ -138,6 +138,7 @@ def dataSetTest():
     n = ann.NeuralNetwork([len(inputs), 10, 12, 10, len(outputs)])
     error = n.train(inputs, outputs, batchSize = 10, epochs = 100, eta = 0.001, testInputs = testingInputs, testOutputs = testingOutputs)
     np.savetxt("error.csv", error, delimiter = ",", fmt = "%.10f")
+
     #_, a = n.feedforward(testingInputs)
     #print(np.round(a[-1]))
     #print(testingOutputs)
